@@ -11,6 +11,8 @@
   "dependencies": {
     "@react-router/node": "^8.4.0",
     "@react-router/serve": "^8.4.0",
+    "crypto-js": "^4.2.0",
+    "firebase": "^13.0.0",
     "isbot": "^5.1.36",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
@@ -19,6 +21,7 @@
   "devDependencies": {
     "@react-router/dev": "^8.4.0",
     "@tailwindcss/vite": "^4.2.2",
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^22",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
