@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default deny: Block all unspecified paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // User Profile: Salt and Zero-Knowledge Verifier
+    // Path: /users/{userId}
+    match /users/{userId} {
+      // Only the authenticated owner can read or write their own user document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Strict write validation
+      allow create, update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.salt is string
+        && request.resource.data.salt.size() >= 16
+        && request.resource.data.salt.size() <= 128
+        && request.resource.data.verifier is map
+        && request.resource.data.verifier.ciphertext is string
+        && request.resource.data.verifier.iv is string;
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Vault Credentials Items
+    // Path: /vaults/{userId}/items/{itemId}
+    match /vaults/{userId}/items/{itemId} {
+      // Only the authenticated owner can list and read their credentials
+      allow read, list: if request.auth != null && request.auth.uid == userId;
+
+      // Creation: must be owner, must include encrypted payload
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.ciphertext is string
+        && request.resource.data.ciphertext.size() > 0
+        && request.resource.data.ciphertext.size() <= 65536 // Max 64KB per credential
+        && request.resource.data.iv is string
+        && request.resource.data.iv.size() >= 12
+        && request.resource.data.userId == request.auth.uid;
+
+      // Update: must be owner
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.ciphertext is string
+        && request.resource.data.ciphertext.size() <= 65536
+        && request.resource.data.iv is string;
+
+      // Deletion: must be owner
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
